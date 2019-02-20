@@ -82,7 +82,7 @@ Function Connect-Office365 {
                         Continue
                     }
                 
-                    Exchange {
+                    ExO {
 
                     $getChildItemSplat = @{
 						Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
