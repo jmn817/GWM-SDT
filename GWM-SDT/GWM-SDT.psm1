@@ -41,7 +41,7 @@ Function Connect-Office365 {
             Verbose	      = $False
         }
     
-        Process {
+        
             # Start of PROCESS block.
 
             if ($Credential -eq $true){
@@ -132,7 +132,7 @@ Function Connect-Office365 {
             # Add additional code here.
     
             
-        } # End of PROCESS block.
+         # End of PROCESS block.
     
        
 
