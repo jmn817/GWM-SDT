@@ -18,37 +18,115 @@ Function Connect-Office365 {
         
     .NOTES
         Author: Jesse Newell
-        Last Edit: 2019-02-06
+        Last Edit: 2019-02-19
         Version 1.0 - initial release of blah
         Version 1.1 - update for blah
     
     #>
-        [CmdletBinding()]  # Add cmdlet features.
+        [CmdletBinding()]
+        [CmdletBinding(DefaultParameterSetName)]  # Add cmdlet features.
         Param (
             # Define parameters below, each separated by a comma
-    
-            [Parameter(Mandatory=$False, Position = 1, ValueFromPipeline = $False)]
-            [Boolean]$MFA,
-            [Parameter(Mandatory=$False, Position = 2, ValueFromPipeline = $False)]
-            [Switch]$PIM,
-            [Parameter(Mandatory=$False, Position = 3, ValueFromPipeline = $False)]
-            [Switch]$AzureAD,
-            [Parameter(Mandatory=$False, Position = 4, ValueFromPipeline = $False)]
-            [Switch]$ExO,
-            [Parameter(Mandatory=$False, Position = 5, ValueFromPipeline = $False)]
-            [Switch]$MSOL,
-            [Parameter(Mandatory=$False, Position = 6, ValueFromPipeline = $False)]
-            [Switch]$Sharepoint,
-            [Parameter(Mandatory=$False, Position = 7, ValueFromPipeline = $False)]
-            [Switch]$All
+
+            [Parameter(Mandatory = $True, Position = 1)]
+            [ValidateSet('PIM', 'AzureAD', 'ExO', 'MSOnline', 'SharePoint')]
+            [string[]]$Service,    
+            [Parameter(Mandatory =$false, Position = 2, ParameterSetName = 'Credential')]
+            [pscredential]$Credential
             # Add additional parameters here.
         )
     
-       End Begin block
+        $getModuleSplat = @{
+            ListAvailable = $True
+            Verbose	      = $False
+        }
     
         Process {
             # Start of PROCESS block.
-            Write-Verbose -Message "Entering the PROCESS block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
+
+            if ($Credential -eq $true){
+
+                $Credential = Get-Credential -Message "Please enter your administration credentials"
+
+            }
+            
+            ForEach ($item in $PSBoundParameters.Service){
+
+                Write-Verbose "Attempting to connect to $Item"  
+                Switch ($item){
+
+                    AzureAD {
+                        if ($null -eq(Get-Module @getmodulesplat -name "AzureAD")){
+
+                            Write-Error "Azure AD module is not present!"
+                            Confirm-AzureStorSimpleLegacyVolumeContainerStatus
+
+                        }
+                        else {
+                            $Connect = Connect-AzureAD
+                            if($Connect -ne $null){
+                                If(($host.ui.RawUI.windowtitle) -notlike "*Connected To:*"){
+                                    $host.ui.RawUI.WindowTitle += " - Connected To: AzureAD"
+
+                                }
+                                Else{
+                                    $host.UI.RawUI.WindowTitle += " - AzureAD"
+
+                                }
+
+
+                            }
+                            
+                        }
+                        
+                        Continue
+                    }
+                
+                    Exchange {
+
+                    $getChildItemSplat = @{
+						Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
+						Recurse = $true
+						ErrorAction = 'SilentlyContinue'
+						Verbose = $false
+					}
+					$MFAExchangeModule = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
+					
+					If ($null -eq $MFAExchangeModule)
+					{
+						Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
+						continue
+					}
+                    Else
+					{
+						Write-Verbose "Importing Exchange MFA Module"
+						. "$MFAExchangeModule\CreateExoPSSession.ps1"
+						
+						Write-Verbose "Connecting to Exchange Online"
+						Connect-EXOPSSession
+						If ($Null -ne (Get-PSSession | Where-Object { $_.ConfigurationName -like "*Exchange*" }))
+						{
+							If (($host.ui.RawUI.WindowTitle) -notlike "*Connected To:*")
+							{
+								$host.ui.RawUI.WindowTitle += " - Connected To: Exchange"
+							}
+							Else
+							{
+								$host.ui.RawUI.WindowTitle += " - Exchange"
+							}
+						}
+                    }
+                    Continue
+
+                }
+
+            }
+
+               
+
+
+            }
+            
     
     
             # Add additional code here.
@@ -134,3 +212,76 @@ Function Connect-Office365 {
         
             } # End of the END Block.
         } # End Function
+
+
+
+        Function Set-MigrationBatchJob {
+            <#
+            .SYNOPSIS
+                This advanced function obtains the Send on Behalf permissions enabled for a mailbox
+            
+            .DESCRIPTION
+                Get-SendOnBehalfPermissions shows what users have Send On Behalf rights on a specific mailbox.
+            
+            .PARAMETER DemoParam1
+                The parameter DemoParam1 is used to define the value of blah and also blah.
+            
+            .PARAMETER DemoParam2
+                The parameter DemoParam2 is used to define the value of blah and also blah.
+            
+            .EXAMPLE
+                The example below does blah
+                PS C:\> <Example>
+                
+            .NOTES
+                Author: Jesse Newell
+                Last Edit: 2019-02-05
+                Version 1.0 - initial release of blah
+                Version 1.1 - update for blah
+            
+            #>
+                [CmdletBinding()]  # Add cmdlet features.
+                Param (
+                    # Define parameters below, each separated by a comma
+            
+                    [Parameter(Mandatory=$True)]
+                    [int]$DemoParam1,
+            
+                    [Parameter(Mandatory=$False)]
+                    [ValidateSet('Alpha','Beta','Gamma')]
+                    [string]$DemoParam2,
+             
+                    # you don’t have to use the full [Parameter()] decorator on every parameter
+                    [string]$DemoParam3,
+                    
+                    [string]$DemoParam4, $DemoParam5
+                    
+                    # Add additional parameters here.
+                )
+            
+                Begin {
+                    # Start of the BEGIN block.
+                    Write-Verbose -Message "Entering the BEGIN block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
+            
+                    # Add additional code here.
+                    
+                } # End Begin block
+            
+                Process {
+                    # Start of PROCESS block.
+                    Write-Verbose -Message "Entering the PROCESS block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
+            
+            
+                    # Add additional code here.
+            
+                    
+                } # End of PROCESS block.
+            
+                End {
+                    # Start of END block.
+                    Write-Verbose -Message "Entering the END block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
+            
+                    # Add additional code here.
+            
+                } # End of the END Block.
+            } # End Function
