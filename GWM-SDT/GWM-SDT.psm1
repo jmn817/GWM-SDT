@@ -85,7 +85,7 @@ Function Connect-Office365 {
                         }
                         $MFAExchangeModule = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
 					
-					    If ($null -eq $PSExoPowershellModuleRoot)
+					    If ($null -eq $MFAExchangeModule)
 					    {
 						    Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
 						    continue
