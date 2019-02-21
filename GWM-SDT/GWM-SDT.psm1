@@ -32,7 +32,7 @@ Function Connect-Office365 {
             [ValidateSet('PIM', 'AzureAD', 'ExO', 'MSOnline', 'SharePoint')]
             [string[]]$Service,    
             [Parameter(Mandatory =$false, Position = 2, ParameterSetName = 'Credential')]
-            [securestring]$Credential
+            [String]$Credential
             # Add additional parameters here.
         )
     
@@ -41,14 +41,6 @@ Function Connect-Office365 {
             Verbose	      = $False
         }
     
-        
-            # Start of PROCESS block.
-
-            if ($Credential -eq $true){
-
-                $Credential = Get-Credential -Message "Please enter your administration credentials"
-
-            }
             
             ForEach ($item in $PSBoundParameters.Service){
 
