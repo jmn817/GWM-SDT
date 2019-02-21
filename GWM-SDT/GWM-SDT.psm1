@@ -32,7 +32,7 @@ Function Connect-Office365 {
             [ValidateSet('PIM', 'AzureAD', 'ExO', 'MSOnline', 'SharePoint')]
             [string[]]$Service,    
             [Parameter(Mandatory =$false, Position = 2, ParameterSetName = 'Credential')]
-            [pscredential]$Credential
+            [securestring]$Credential
             # Add additional parameters here.
         )
     
@@ -84,57 +84,44 @@ Function Connect-Office365 {
                 
                     ExO {
 
-                    $getChildItemSplat = @{
-						Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
-						Recurse = $true
-						ErrorAction = 'SilentlyContinue'
-						Verbose = $false
-					}
-					$MFAExchangeModule = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
+                    
+                        $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
 					
-					If ($null -eq $MFAExchangeModule)
-					{
-						Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
-						continue
-					}
-                    Else
-					{
-						Write-Verbose "Importing Exchange MFA Module"
-						. "$MFAExchangeModule\CreateExoPSSession.ps1"
-						
-						Write-Verbose "Connecting to Exchange Online"
-						Connect-EXOPSSession
-						If ($Null -ne (Get-PSSession | Where-Object { $_.ConfigurationName -like "*Exchange*" }))
-						{
-							If (($host.ui.RawUI.WindowTitle) -notlike "*Connected To:*")
-							{
-								$host.ui.RawUI.WindowTitle += " - Connected To: Exchange"
-							}
-							Else
-							{
-								$host.ui.RawUI.WindowTitle += " - Exchange"
-							}
-						}
+					    If ($null -eq $PSExoPowershellModuleRoot)
+					    {
+						    Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
+						    continue
+					        }
+                        Else
+					    {
+                            if ($Credential -eq $true){
+                                Write-Verbose "Importing Exchange MFA Module with Credentials"
+                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+                                Import-Module -verbose $ModulePath;
+                                $Office365PSSession = New-ExoPSSession -userprincipalname $Credential -ConnectionUri "https://outlook.office365.com/powershell-liveid/"
+                                Import-PSSession $Office365PSSession
+
+                            }
+
+                            else {
+                            
+                                Write-Verbose "Importing Exchange MFA Module"
+                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+                                Import-Module -verbose $ModulePath;
+                                $Office365PSSession = New-ExoPSSession -ConnectionUri "https://outlook.office365.com/powershell-liveid/"
+                                Import-PSSession $Office365PSSession
+						        Write-Verbose "Connecting to Exchange Online"
+                            }
+					
+                        }
+                        Continue
+
+                        }
                     }
-                    Continue
 
                 }
-
-            }
-
-               
-
-
-            }
-            
-    
-    
-            # Add additional code here.
-    
-            
-         # End of PROCESS block.
-    
-       
 
         
     } # End Function
