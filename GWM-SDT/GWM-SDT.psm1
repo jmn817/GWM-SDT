@@ -98,14 +98,13 @@ Function Connect-Office365 {
                             }
 
                             else {
-                                $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
+                                
                                 Write-Verbose "Importing Exchange MFA Module"
-                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
-                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
-                                Import-Module -verbose $ModulePath;
-                                $Office365PSSession = New-ExoPSSession -ConnectionUri "https://outlook.office365.com/powershell-liveid/"
-                                Import-PSSession $Office365PSSession
-						        Write-Verbose "Connecting to Exchange Online"
+                                . "$PSExoPowershellModuleRoot\CreateExoPSSession.ps1"
+                            
+                                Write-Verbose "Connecting to Exchange Online"
+                                Connect-EXOPSSession    
+                            
                             }
 					
                         }
