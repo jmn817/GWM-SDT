@@ -77,7 +77,13 @@ Function Connect-Office365 {
                     ExO {
 
                     
-                        $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
+                        $getChildItemSplat = @{
+                            Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
+                            Recurse = $true
+                            ErrorAction = 'SilentlyContinue'
+                            Verbose = $false
+                        }
+                        $MFAExchangeModule = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
 					
 					    If ($null -eq $PSExoPowershellModuleRoot)
 					    {
@@ -86,26 +92,15 @@ Function Connect-Office365 {
 					        }
                         Else
 					    {
-                            if ($Credential -eq $true){
-                                $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
-                                Write-Verbose "Importing Exchange MFA Module with Credentials"
-                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
-                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
-                                Import-Module -verbose $ModulePath;
-                                $Office365PSSession = New-ExoPSSession -userprincipalname $Credential -ConnectionUri "https://outlook.office365.com/powershell-liveid/"
-                                Import-PSSession $Office365PSSession
-
-                            }
-
-                            else {
+                          
                                 
                                 Write-Verbose "Importing Exchange MFA Module"
-                                . "$PSExoPowershellModuleRoot\CreateExoPSSession.ps1"
+                                . "$MFAExchangeModule\CreateExoPSSession.ps1"
                             
                                 Write-Verbose "Connecting to Exchange Online"
                                 Connect-EXOPSSession    
                             
-                            }
+                            
 					
                         }
                         Continue
