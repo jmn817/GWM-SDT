@@ -95,6 +95,7 @@ Function Connect-Office365 {
                         Else
 					    {
                             if ($Credential -eq $true){
+                                $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
                                 Write-Verbose "Importing Exchange MFA Module with Credentials"
                                 $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
                                 $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
@@ -105,7 +106,7 @@ Function Connect-Office365 {
                             }
 
                             else {
-                            
+                                $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select -Last 1).DirectoryName
                                 Write-Verbose "Importing Exchange MFA Module"
                                 $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
                                 $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
