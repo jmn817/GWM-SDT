@@ -78,7 +78,7 @@ Function Connect-Office365 {
 
                     
                         $getChildItemSplat = @{
-                            Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
+                            Path = "$env:USERPROFILE"
                             Recurse = $true
                             ErrorAction = 'SilentlyContinue'
                             Verbose = $false
