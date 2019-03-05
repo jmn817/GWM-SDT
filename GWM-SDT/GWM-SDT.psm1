@@ -77,15 +77,10 @@ Function Connect-Office365 {
                     ExO {
 
                     
-                        $getChildItemSplat = @{
-                            Path = "$env:USERPROFILE"
-                            Recurse = $true
-                            ErrorAction = 'SilentlyContinue'
-                            Verbose = $false
-                        }
-                        $MFAExchangeModule = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
+                
+                        $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
 					
-					    If ($null -eq $MFAExchangeModule)
+					    If ($null -eq $PSExoPowershellModuleRoot)
 					    {
 						    Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
 						    continue
@@ -95,10 +90,16 @@ Function Connect-Office365 {
                           
                                 
                                 Write-Verbose "Importing Exchange MFA Module"
-                                . "$MFAExchangeModule\CreateExoPSSession.ps1"
+                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+
+                                Import-Module -verbose $ModulePath;
+
+                                $Office365PSSession = New-ExoPSSession -userprincipalname $office365UserPrincipalName -ConnectionUri "https://outlook.office365.com/powershell-liveid/" 
                             
                                 Write-Verbose "Connecting to Exchange Online"
-                                Connect-EXOPSSession    
+                                Import-PSSession $Office365PSSession
+                                Connect-ExoPssession
                             
                             
 					
