@@ -76,16 +76,9 @@ Function Connect-Office365 {
                     }
                 
                     ExO {
+                       
 
-                        $getChildItemSplat = @{
-                            Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
-                            Recurse = $true
-                            ErrorAction = 'SilentlyContinue'
-                            Verbose = $false
-                        }
-                        $PSExoPowershellModuleRoot = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
-                
-                        #$PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
+                       $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
 					
 					    If ($null -eq $PSExoPowershellModuleRoot)
 					    {
@@ -94,28 +87,47 @@ Function Connect-Office365 {
 					        }
                         Else
 					    {
-                          
-                                
+                            
                                 Write-Verbose "Importing Exchange MFA Module"
-                                #$ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
-                                #$ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
-
-                                #Import-Module -verbose $ModulePath;
-
-                                #$Office365PSSession = New-ExoPSSession -userprincipalname $office365UserPrincipalName -ConnectionUri "https://outlook.office365.com/powershell-liveid/" 
-
-                                . "$PSExoPowershellModuleRoot\CreateExoPSSession.ps1"
-                            
+                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+                                Import-Module -verbose $ModulePath; 
+                                $Office365PSSession = New-ExoPssession -userprincipalname $office365UserPrincipalName -ConnectionUri "https://outlook.office365.com/powershell-liveid/" 
+                                Import-Module (Import-PSSession $Office365PSSession -AllowClobber) -Global
                                 Write-Verbose "Connecting to Exchange Online"
-                                #Import-PSSession $Office365PSSession
                                 
-                            
-                            
-					
+                                
                         }
                         Continue
 
                         }
+
+                    PIM {
+                            if ($null -eq(Get-Module @getmodulesplat -name "Microsoft.Azure.ActiveDirectory.PIM.PSModule")){
+
+                                Write-Error "PIM Service is not enabled!"
+                                Continue
+    
+                            }
+                            else {
+
+                                $Connect = Connect-PimService
+                                if($null -eq $Connect){
+                                    If(($host.ui.RawUI.windowtitle) -notlike "*Connected To:*"){
+                                        $host.ui.RawUI.WindowTitle += " - Connected To: PIM Service"
+    
+                                    }
+                                    Else{
+                                        $host.UI.RawUI.WindowTitle += " - PIM Service"
+    
+                                    }
+
+                                }
+
+                            }
+
+                        Continue
+
                     }
 
                 }
