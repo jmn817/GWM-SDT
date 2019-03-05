@@ -31,8 +31,8 @@ Function Connect-Office365 {
             [Parameter(Mandatory = $True, Position = 1)]
             [ValidateSet('PIM', 'AzureAD', 'ExO', 'MSOnline', 'SharePoint')]
             [string[]]$Service,    
-            [Parameter(Mandatory =$false, Position = 2, ParameterSetName = 'Credential')]
-            [String]$Credential
+            [Parameter(Mandatory =$false, Position = 2, ParameterSetName = 'UserPrincipalName')]
+            [String]$office365UserPrincipalName
             # Add additional parameters here.
         )
     
@@ -52,11 +52,12 @@ Function Connect-Office365 {
 
                             Write-Error "Azure AD module is not present!"
                             Confirm-AzureStorSimpleLegacyVolumeContainerStatus
+                            Continue
 
                         }
                         else {
                             $Connect = Connect-AzureAD
-                            if($Connect -ne $null){
+                            if($null -eq $Connect){
                                 If(($host.ui.RawUI.windowtitle) -notlike "*Connected To:*"){
                                     $host.ui.RawUI.WindowTitle += " - Connected To: AzureAD"
 
@@ -90,16 +91,18 @@ Function Connect-Office365 {
                           
                                 
                                 Write-Verbose "Importing Exchange MFA Module"
-                                $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
-                                $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+                                #$ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+                                #$ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
 
-                                Import-Module -verbose $ModulePath;
+                                #Import-Module -verbose $ModulePath;
 
-                                $Office365PSSession = New-ExoPSSession -userprincipalname $office365UserPrincipalName -ConnectionUri "https://outlook.office365.com/powershell-liveid/" 
+                                #$Office365PSSession = New-ExoPSSession -userprincipalname $office365UserPrincipalName -ConnectionUri "https://outlook.office365.com/powershell-liveid/" 
+
+                                . "$PSExoPowershellModuleRoot\CreateExoPSSession.ps1"
                             
                                 Write-Verbose "Connecting to Exchange Online"
-                                Import-PSSession $Office365PSSession
-                                Connect-ExoPssession
+                                #Import-PSSession $Office365PSSession
+                                
                             
                             
 					
