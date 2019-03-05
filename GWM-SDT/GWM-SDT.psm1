@@ -126,11 +126,13 @@ Function Connect-Office365 {
 
                             }
 
-                        Continue
+                            Continue
 
-                    }
+                        }
 
                 }
+
+            }
 
         
     } # End Function
