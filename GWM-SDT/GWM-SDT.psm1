@@ -77,9 +77,15 @@ Function Connect-Office365 {
                 
                     ExO {
 
-                    
+                        $getChildItemSplat = @{
+                            Path = "$Env:LOCALAPPDATA\Apps\2.0\*\CreateExoPSSession.ps1"
+                            Recurse = $true
+                            ErrorAction = 'SilentlyContinue'
+                            Verbose = $false
+                        }
+                        $PSExoPowershellModuleRoot = ((Get-ChildItem @getChildItemSplat | Select-Object -ExpandProperty Target -First 1).Replace("CreateExoPSSession.ps1", ""))
                 
-                        $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
+                        #$PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
 					
 					    If ($null -eq $PSExoPowershellModuleRoot)
 					    {
