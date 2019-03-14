@@ -390,7 +390,7 @@ Function Enable-PIMElevation {
     
         }
 
-       Connect-PimService
+       Connect-PimService -Global
 
        $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
        
