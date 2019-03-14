@@ -392,8 +392,18 @@ Function Enable-PIMElevation {
 
         $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
 
-        $PIMConnected = show-pimserviceconnection.username -ne $null
-        $PIMNotConnected = Show-PimServiceConnection.username -eq $null
+        $PIMConnectionStatus = (Show-PimServiceConnection).username
+            if ($null -eq $PIMConnectionStatus){
+
+                $PIMNotConnected
+
+            }
+            else {
+
+                $PIMConnected
+
+            }
+        
 
 
 
@@ -457,3 +467,5 @@ Function Enable-PIMElevation {
 
     # End of the END Block.
 } # End Function
+
+
