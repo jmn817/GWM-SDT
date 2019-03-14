@@ -390,56 +390,12 @@ Function Enable-PIMElevation {
     
         }
 
-        $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
-
-        $PIMConnectionStatus = (Show-PimServiceConnection).username
-            if ($null -eq $PIMConnectionStatus){
-
-                $PIMNotConnected
-
-            }
-            else {
-
-                $PIMConnected
-
-            }
-        
-
+       Connect-PimService
 
 
     }
 
     Process {
-
-        if ($PIMNotConnected) {
-
-            Write-Verbose "Not connected to PIM"
-            Write-Verbose "Connect to PIM Service"
-                
-            Connect-PimService
-                
-
-            if ($AutoFill -eq $true) {
-                Write-Verbose "Adding general reason and general ticket number"
-                foreach ($role in $roles) {
-                    Enable-PrivilegedRoleAssignment -roleID $role -Duration 9 -ticketnumber "SNOW Tickets" -Reason "SNOW Tickets"
-                }
-
-                Continue
-
-            }
-            else {
-                Write-Verbose "Include duration, ticketnumber, and reason for elevation"
-
-                foreach ($role in $roles) {
-                    Enable-PrivilegedRoleAssignment -roleID $role -Duration $Duration -ticketnumber $TicketNumber -Reason $Reason
-                }
-                    
-            }
-                
-        }
-
-        if ($PIMConnected) {
 
             Write-Verbose "Connected to PIM"
             if ($AutoFill -eq $true) {
@@ -460,8 +416,6 @@ Function Enable-PIMElevation {
                 
             }
 
-
-        }
 
     }
 
