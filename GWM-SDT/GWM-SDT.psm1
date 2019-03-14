@@ -389,17 +389,14 @@ Function Enable-PIMElevation {
             Write-Error "PIM Service module does not exist!" -ErrorAction Stop
     
         }
-
-       Connect-PimService -Global
-
-       $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
        
-
 
     }
 
     Process {
 
+            Connect-PimService
+            $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
             Write-Verbose "Connected to PIM"
             if ($AutoFill -eq $true) {
                 Write-Verbose "Adding general reason and general ticket number"
