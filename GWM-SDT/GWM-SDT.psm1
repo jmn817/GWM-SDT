@@ -377,7 +377,7 @@ Function Enable-PIMElevation {
 
     )
     
-    Begin {
+    
         <#Check if PIM Service module is installed#>
         $getModuleSplat = @{
             ListAvailable = $True
@@ -391,9 +391,9 @@ Function Enable-PIMElevation {
         }
        
 
-    }
+    
 
-    Process {
+    
 
             Connect-PimService
             $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
@@ -428,7 +428,7 @@ Function Enable-PIMElevation {
             }
 
 
-    }
+    
 
     # End of the END Block.
 } # End Function
