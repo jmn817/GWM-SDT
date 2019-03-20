@@ -392,7 +392,7 @@ Function Enable-PIMElevation {
 
             if ($AutoFill -eq $true) {
                 Connect-PimService
-                $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false | Select-Object rolename, roleID
+                $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false | Select-Object rolename, roleID}
                 Write-Verbose "Connected to PIM"
                 Write-Verbose "Adding general reason and general ticket number"
                 foreach ($role in $roles) {
@@ -413,6 +413,7 @@ Function Enable-PIMElevation {
                 }
 
             }
+            
             else {
                 Write-Verbose "Include duration, ticketnumber, and reason for elevation"
 
@@ -423,7 +424,7 @@ Function Enable-PIMElevation {
             }
 
 
-        }
+        
 
     # End of the END Block.
 } # End Function
