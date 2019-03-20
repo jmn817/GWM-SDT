@@ -265,11 +265,11 @@ Function Get-SendOnBehalfPermissions {
 
 
 
-Function Set-MigrationBatchJob {
+Function Move-GitModule {
     <#
             .SYNOPSIS
-                This advanced function obtains the Send on Behalf permissions enabled for a mailbox
-            
+                Advanced function to move the downloaded git module to the necessary path. Reducing the 
+
             .DESCRIPTION
                 Get-SendOnBehalfPermissions shows what users have Send On Behalf rights on a specific mailbox.
             
@@ -389,21 +389,16 @@ Function Enable-PIMElevation {
             Write-Error "PIM Service module does not exist!" -ErrorAction Stop
     
         }
-       
 
-    
-
-    
-
-            Connect-PimService
-            $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
-            Write-Verbose "Connected to PIM"
             if ($AutoFill -eq $true) {
+                Connect-PimService
+                $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
+                Write-Verbose "Connected to PIM"
                 Write-Verbose "Adding general reason and general ticket number"
                 foreach ($role in $roles) {
 
-                    $roleName = (Get-PrivilegedRoleAssignment -roleID $role).rolename
-                    if (Get-PrivilegedRoleAssignment -roleID $role | Where-Object {$_.isElevated -eq $true}){
+                    $roleName = (Get-PrivilegedRoleAssignment -roleid $role).rolename
+                    if (Get-PrivilegedRoleAssignment -roleid $role | Where-Object {$_.isElevated -eq $true}){
 
                         Write-Output "$rolename is already elevated...skipping"
                         Continue
