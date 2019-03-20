@@ -392,22 +392,22 @@ Function Enable-PIMElevation {
 
             if ($AutoFill -eq $true) {
                 Connect-PimService
-                $roles = (Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false}).roleid
+                $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false | Select-Object rolename, roleID
                 Write-Verbose "Connected to PIM"
                 Write-Verbose "Adding general reason and general ticket number"
                 foreach ($role in $roles) {
 
-                    $roleName = (Get-PrivilegedRoleAssignment -roleid $role).rolename
-                    if (Get-PrivilegedRoleAssignment -roleid $role | Where-Object {$_.isElevated -eq $true}){
+                    
+                    if (Get-PrivilegedRoleAssignment | Where-Object {$_.roleid -eq $role.roleid -and $_.isElevated -eq $true}){
 
-                        Write-Output "$rolename is already elevated...skipping"
+                        Write-Output $role.name " is already elevated...skipping"
                         Continue
                     }
 
                     else {
-                        Write-Output "Enabling $rolename"
-                        Enable-PrivilegedRoleAssignment -roleID $role -Duration 9 -ticketnumber "SNOW Tickets" -Reason "SNOW Tickets"
-                        Write-Output "$rolename is now enabled"
+                        Write-Output "Enabling " $role.name
+                        Enable-PrivilegedRoleAssignment -roleID $role.roleid -Duration 9 -ticketnumber "SNOW Tickets" -Reason "SNOW Tickets"
+                        Write-Output $role.name " is now enabled"
                     }
 
                 }
@@ -423,7 +423,7 @@ Function Enable-PIMElevation {
             }
 
 
-    
+        }
 
     # End of the END Block.
 } # End Function
