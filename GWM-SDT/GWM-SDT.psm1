@@ -340,10 +340,10 @@ Function Move-GitModule {
 Function Enable-PIMElevation {
     <#
         .SYNOPSIS
-            This advanced function elevates the users administration roles.
+            This advanced function elevates the users administration roles using the PIM Service. 
         
         .DESCRIPTION
-            Enable the PIM elevation for cloud enviornment.
+            Enable the PIM elevation for administrtion roles. One function to elevate all user roles.
         
         .PARAMETER DemoParam1
             The parameter DemoParam1 is used to define the value of blah and also blah.
@@ -352,8 +352,17 @@ Function Enable-PIMElevation {
             The parameter DemoParam2 is used to define the value of blah and also blah.
         
         .EXAMPLE
-            The example below does blah
-            PS C:\> <Example>
+            
+            To enable PIM for all administration roles with already prefilled ticket number, reason, and time use the AutoFill Parameter:
+
+            Enable-PIMElevation -AutoFill:$true
+
+            To enable PIM for all administration roles with specific ticket number, reason, and time:
+
+            Enable-PIMElevation -Duration 9 -TicketNumber INC0093333 -Reason 'Device Administration for intall'
+
+            
+            
             
         .NOTES
             Author: Jesse Newell
@@ -372,12 +381,14 @@ Function Enable-PIMElevation {
         [Parameter(Mandatory = $false, ValueFromPipeline = $true, Position = 3)]
         [string[]]$TicketNumber,
         [Parameter(Mandatory = $false, ValueFromPipeline = $true, Position = 4)]
-        [string[]]$Reason
+        [string[]]$Reason,
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true, Position = 5)]
+        [string[]]$SpecificRole
             
 
     )
-    
-    
+
+    Begin {
         <#Check if PIM Service module is installed#>
         $getModuleSplat = @{
             ListAvailable = $True
@@ -389,11 +400,19 @@ Function Enable-PIMElevation {
             Write-Error "PIM Service module does not exist!" -ErrorAction Stop
     
         }
+        Write-Output "Connecting to PIM Service"
+        Connect-PimService
+        Write-Output "PIM Service connected... obtaining administration roles."
+        $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false} | Select-Object rolename, roleID
+        $EmptyFields =@()
 
+    }#End of the BEGIN Block
+    
+    
+        
+    Process {
+            
             if ($AutoFill -eq $true) {
-                Connect-PimService
-                $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false | Select-Object rolename, roleID}
-                Write-Verbose "Connected to PIM"
                 Write-Verbose "Adding general reason and general ticket number"
                 foreach ($role in $roles) {
 
@@ -412,6 +431,8 @@ Function Enable-PIMElevation {
 
                 }
 
+                Write-Output "All administration roles are now elevated"
+                Continue 
             }
             
             else {
@@ -424,9 +445,62 @@ Function Enable-PIMElevation {
             }
 
 
-        
+            if ($null -eq $SpecificRole){
 
-    # End of the END Block.
+                Write-Host "Please select an administration role you are currently assigned to"
+                Write-Host "Currently you have the following administration roles:"
+                foreach ($role in $roles){
+
+                    Write-Output $role.name
+
+                }
+                Continue
+            }
+
+            if ($SpecificRole){
+
+                    if ($null -eq $Duration -or $TicketNumber -or $Reason){
+                        
+                        if ($null -eq $Duration){
+
+                            $EmptyFields += "Duration"
+
+                        }
+
+                        if ($null -eq $TicketNumber){
+
+                            $EmptyFields += "TicketNumber"
+                        }
+
+                        if($null -eq $Reason){
+
+                            $EmptyFields += "Reason"
+                        }
+
+                        foreach ($emptyfield in $emptyfields){
+
+                            Write-Output $emptyfield " is empty! Please fill in the parameter"
+
+                        }
+                        Continue
+
+                    }
+
+
+                    
+
+
+                }
+        
+    }#End of the PROCESS Block
+
+
+        End {
+
+
+
+
+        }# End of the END Block.
 } # End Function
 
 
