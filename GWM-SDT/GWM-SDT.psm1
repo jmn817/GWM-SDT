@@ -222,35 +222,79 @@ Function Get-SendOnBehalfPermissions {
         # Define parameters below, each separated by a comma
         
         [Parameter(Mandatory = $True)]
-        [int]$DemoParam1,
+        [String]$SharedMailbox
         
-        [Parameter(Mandatory = $False)]
-        [ValidateSet('Alpha', 'Beta', 'Gamma')]
-        [string]$DemoParam2,
-         
-        # you don’t have to use the full [Parameter()] decorator on every parameter
-        [string]$DemoParam3,
-                
-        [string]$DemoParam4, $DemoParam5
-                
         # Add additional parameters here.
     )
         
     Begin {
-        # Start of the BEGIN block.
-        Write-Verbose -Message "Entering the BEGIN block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
-        
-        # Add additional code here.
+        $getModuleSplat = @{
+            ListAvailable = $True
+            Verbose       = $False
+        }
+        #Exchange Online Module Installed?
+        try {
+
+            $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
+
+        }
+
+        Catch {
+
+            If ($null -eq $PSExoPowershellModuleRoot) {
+                Write-Error "The Exchange Online MFA Module was not found! https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/connect-to-exchange-online-powershell/mfa-connect-to-exchange-online-powershell?view=exchange-ps"
+
+            }
+
+        }
+
+        #Checking if Exchange Online is connected
+        Write-Host "Checking if Exchange Online is connected"
+        $checkEXOPSSession = Get-PSSession
+
+        if ($checkEXOPSSession.state -eq "Opened" -and $checkEXOPSSession.configurationname -eq "Microsoft.Exchange") {
+    
+            Write-Host "Exchange Online Powershell already running. Continuing PST Import..." -ForegroundColor Green
+    
+        }
+
+        #If ExOPssesion is running, ignore module import. If not, import module.
+
+        else {
+
+            Write-Host "Not connected to Exchange Online Powershell...please sign in to complete authentication and import module" -ForegroundColor Yellow
+
+            $PSExoPowershellModuleRoot = (Get-ChildItem -Path $env:userprofile -Filter CreateExoPSSession.ps1 -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -Last 1).DirectoryName
+            $ExoPowershellModule = "Microsoft.Exchange.Management.ExoPowershellModule.dll";
+            $ModulePath = [System.IO.Path]::Combine($PSExoPowershellModuleRoot, $ExoPowershellModule);
+            Import-Module -verbose $ModulePath;
+            $Office365PSSession = New-ExoPSSession -ConnectionUri "https://outlook.office365.com/powershell-liveid/"
+            Import-Module (Import-PSSession $Office365PSSession -AllowClobber) -Global
+            Write-Host "Module imported successfully."
+
+        }
                 
-    } # End Begin block
+    }# End Begin block
         
     Process {
-        # Start of PROCESS block.
-        Write-Verbose -Message "Entering the PROCESS block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
+
+        if ($SharedMailbox) {
+            $users = Get-Mailbox -Identity sharedmailbox@dbschenker.com | Select-Object GrantSendOnBehalfTo -ErrorAction SilentlyContinue | ForEach-Object { $_.GrantSendonBehalfTo }
+
+            foreach ($user in $users) {
         
+                $username = get-mailbox -Identity $user | Select-Object -ExpandProperty primarysmtpaddress
         
-        # Add additional code here.
-        
+                if ($user) {
+                
+                    Write-Host "$username " -nonewline; Write-Host "has the GrantSendOnBehalf permission set." -f Green;
+                }
+                
+            }
+
+
+        }
+
                 
     } # End of PROCESS block.
         
@@ -264,77 +308,6 @@ Function Get-SendOnBehalfPermissions {
 } # End Function
 
 
-
-Function Move-GitModule {
-    <#
-            .SYNOPSIS
-                Advanced function to move the downloaded git module to the necessary path. Reducing the 
-
-            .DESCRIPTION
-                Get-SendOnBehalfPermissions shows what users have Send On Behalf rights on a specific mailbox.
-            
-            .PARAMETER DemoParam1
-                The parameter DemoParam1 is used to define the value of blah and also blah.
-            
-            .PARAMETER DemoParam2
-                The parameter DemoParam2 is used to define the value of blah and also blah.
-            
-            .EXAMPLE
-                The example below does blah
-                PS C:\> <Example>
-                
-            .NOTES
-                Author: Jesse Newell
-                Last Edit: 2019-02-05
-                Version 1.0 - initial release of blah
-                Version 1.1 - update for blah
-            
-            #>
-    [CmdletBinding()]  # Add cmdlet features.
-    Param (
-        # Define parameters below, each separated by a comma
-            
-        [Parameter(Mandatory = $True)]
-        [int]$DemoParam1,
-            
-        [Parameter(Mandatory = $False)]
-        [ValidateSet('Alpha', 'Beta', 'Gamma')]
-        [string]$DemoParam2,
-             
-        # you don’t have to use the full [Parameter()] decorator on every parameter
-        [string]$DemoParam3,
-                    
-        [string]$DemoParam4, $DemoParam5
-                    
-        # Add additional parameters here.
-    )
-            
-    Begin {
-        # Start of the BEGIN block.
-        Write-Verbose -Message "Entering the BEGIN block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
-            
-        # Add additional code here.
-                    
-    } # End Begin block
-            
-    Process {
-        # Start of PROCESS block.
-        Write-Verbose -Message "Entering the PROCESS block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
-            
-            
-        # Add additional code here.
-            
-                    
-    } # End of PROCESS block.
-            
-    End {
-        # Start of END block.
-        Write-Verbose -Message "Entering the END block [$($MyInvocation.MyCommand.CommandType): $($MyInvocation.MyCommand.Name)]."
-            
-        # Add additional code here.
-            
-    } # End of the END Block.
-} # End Function
 
 
 Function Enable-PIMElevation {
@@ -360,8 +333,6 @@ Function Enable-PIMElevation {
             To enable PIM for all administration roles with specific ticket number, reason, and time:
 
             Enable-PIMElevation -Duration 9 -TicketNumber INC0093333 -Reason 'Device Administration for intall'
-
-            
             
             
         .NOTES
@@ -403,8 +374,8 @@ Function Enable-PIMElevation {
         Write-Output "Connecting to PIM Service"
         Connect-PimService
         Write-Output "PIM Service connected... obtaining administration roles."
-        $roles = Get-PrivilegedRoleAssignment | where-object {$_.isElevated -eq $false} | Select-Object rolename, roleID
-        $EmptyFields =@()
+        $roles = Get-PrivilegedRoleAssignment | Where-Object { $_.isElevated -eq $false } | Select-Object rolename, roleID
+        $EmptyFields = @()
 
     }#End of the BEGIN Block
     
@@ -412,95 +383,95 @@ Function Enable-PIMElevation {
         
     Process {
             
-            if ($AutoFill -eq $true) {
-                Write-Verbose "Adding general reason and general ticket number"
-                foreach ($role in $roles) {
+        if ($AutoFill -eq $true) {
+            Write-Verbose "Adding general reason and general ticket number"
+            foreach ($role in $roles) {
 
                     
-                    if (Get-PrivilegedRoleAssignment | Where-Object {$_.roleid -eq $role.roleid -and $_.isElevated -eq $true}){
+                if (Get-PrivilegedRoleAssignment | Where-Object { $_.roleid -eq $role.roleid -and $_.isElevated -eq $true }) {
 
-                        Write-Output $role.name " is already elevated...skipping"
-                        Continue
-                    }
-
-                    else {
-                        Write-Output "Enabling " $role.name
-                        Enable-PrivilegedRoleAssignment -roleID $role.roleid -Duration 9 -ticketnumber "SNOW Tickets" -Reason "SNOW Tickets"
-                        Write-Output $role.name " is now enabled"
-                    }
-
+                    Write-Output $role.name " is already elevated...skipping"
+                    Continue
                 }
 
-                Write-Output "All administration roles are now elevated"
-                Continue 
+                else {
+                    Write-Output "Enabling " $role.name
+                    Enable-PrivilegedRoleAssignment -roleID $role.roleid -Duration 9 -ticketnumber "SNOW Tickets" -Reason "SNOW Tickets"
+                    Write-Output $role.name " is now enabled"
+                }
+
             }
+
+            Write-Output "All administration roles are now elevated"
+            Continue 
+        }
             
-            else {
-                Write-Verbose "Include duration, ticketnumber, and reason for elevation"
+        else {
+            Write-Verbose "Include duration, ticketnumber, and reason for elevation"
 
-                foreach ($role in $roles) {
-                    Enable-PrivilegedRoleAssignment -roleID $role -Duration $Duration -ticketnumber $TicketNumber -Reason $Reason
-                }
-                
+            foreach ($role in $roles) {
+                Enable-PrivilegedRoleAssignment -roleID $role -Duration $Duration -ticketnumber $TicketNumber -Reason $Reason
             }
+                
+        }
 
 
-            if ($null -eq $SpecificRole){
+        if ($null -eq $SpecificRole) {
 
-                Write-Host "Please select an administration role you are currently assigned to"
-                Write-Host "Currently you have the following administration roles:"
-                foreach ($role in $roles){
+            Write-Host "Please select an administration role you are currently assigned to"
+            Write-Host "Currently you have the following administration roles:"
+            foreach ($role in $roles) {
 
-                    Write-Output $role.name
+                Write-Output $role.name
+
+            }
+            Continue
+        }
+
+        if ($SpecificRole) {
+
+            if ($null -eq $Duration -or $TicketNumber -or $Reason) {
+                        
+                if ($null -eq $Duration) {
+
+                    $EmptyFields += "Duration"
+
+                }
+
+                if ($null -eq $TicketNumber) {
+
+                    $EmptyFields += "TicketNumber"
+                }
+
+                if ($null -eq $Reason) {
+
+                    $EmptyFields += "Reason"
+                }
+
+                foreach ($emptyfield in $emptyfields) {
+
+                    Write-Output $emptyfield " is empty! Please fill in the parameter"
 
                 }
                 Continue
+
             }
-
-            if ($SpecificRole){
-
-                    if ($null -eq $Duration -or $TicketNumber -or $Reason){
-                        
-                        if ($null -eq $Duration){
-
-                            $EmptyFields += "Duration"
-
-                        }
-
-                        if ($null -eq $TicketNumber){
-
-                            $EmptyFields += "TicketNumber"
-                        }
-
-                        if($null -eq $Reason){
-
-                            $EmptyFields += "Reason"
-                        }
-
-                        foreach ($emptyfield in $emptyfields){
-
-                            Write-Output $emptyfield " is empty! Please fill in the parameter"
-
-                        }
-                        Continue
-
-                    }
 
 
                     
 
 
-                }
+        }
         
     }#End of the PROCESS Block
 
 
-        End {
+    End {
 
 
 
 
-        }# End of the END Block.
+    }# End of the END Block.
 } # End Function
 
 
