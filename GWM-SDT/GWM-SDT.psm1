@@ -279,7 +279,7 @@ Function Get-SendOnBehalfPermissions {
     Process {
 
         if ($SharedMailbox) {
-            $users = Get-Mailbox -Identity sharedmailbox@dbschenker.com | Select-Object GrantSendOnBehalfTo -ErrorAction SilentlyContinue | ForEach-Object { $_.GrantSendonBehalfTo }
+            $users = Get-Mailbox -Identity $SharedMailbox | Select-Object GrantSendOnBehalfTo -ErrorAction SilentlyContinue | ForEach-Object { $_.GrantSendonBehalfTo }
 
             foreach ($user in $users) {
         
