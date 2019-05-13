@@ -776,7 +776,7 @@ Function Get-MissingLocationPackage {
 
         try {
         <#Getting directory information#>
-        $filebase = Join-Path $PSScriptRoot $filename -ErrorAction SilentlyContinue
+        $filebase = Join-Path $filename -ErrorAction SilentlyContinue
         }
         catch {
          
