@@ -782,7 +782,7 @@ Function Get-MissingLocationPackage {
          
             <#If no directory is set then it will default to your OneDrive documents folder#>
             Write-Host "No path set, defaulting to the OneDrive documents folder"
-            $userDocuments = "$env:USERPROFILE\OneDrive - Schenker AG\Documents"
+            $userDocuments = -Global "$env:USERPROFILE\OneDrive - Schenker AG\Documents"
             $filebase = Join-Path $userDocuments $filename
 
         }
