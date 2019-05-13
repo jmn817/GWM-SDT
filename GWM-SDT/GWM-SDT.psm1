@@ -776,7 +776,7 @@ Function Get-MissingLocationPackage {
 
         try {
         <#Getting directory information#>
-        $filebase = Join-Path $filename -ErrorAction SilentlyContinue
+        $filebase = Join-Path $env:OneDrive $filename -ErrorAction SilentlyContinue
         }
         catch {
          
