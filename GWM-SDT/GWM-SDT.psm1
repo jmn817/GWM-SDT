@@ -208,6 +208,12 @@ Function Complete-MigrationUser {
 
     #>
 
+    [cmdletbinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Identity
+    )
+
 
     Begin {
 
@@ -256,12 +262,27 @@ Function Complete-MigrationUser {
             Write-Host "Module imported successfully."
 
         }
-
+        $Date = Get-Date
     }
 
     Process {
 
-
+        try {
+            $MoveRequest = Get-MoveRequest -Identity $Identity -ErrorAction silentlycontinue
+        }
+        catch {
+        
+        }
+        
+        
+        if ($MoveRequest) {
+            Write-Host "Completing single user in $($MoveRequest.BatchName)."
+            $MoveRequest | Set-MoveRequest -CompleteAfter $Date
+            $MoveRequest | Resume-MoveRequest -Confirm:$false
+        }
+        else {
+            Write-Warning "Unable to find migration job for $Identity."
+        }
 
     }
 
@@ -484,8 +505,8 @@ Function Set-SendOnBehalfPermissions {
             Write-Host "Module imported successfully."
     
         }
-        $usersassigned =@()
-        $mailguid =@()
+        $usersassigned = @()
+        $mailguid = @()
 
     }
 
@@ -496,53 +517,53 @@ Function Set-SendOnBehalfPermissions {
         #Check if the user has access rights to the shared mailbox already
         
 
-            $usersassigned = Get-mailbox -identity $sharedmailbox | select-object GrantSendonBehalfTo -ErrorAction SilentlyContinue | ForEach-Object {$_.GrantSendOnBehalfTo}
+        $usersassigned = Get-mailbox -identity $sharedmailbox | select-object GrantSendonBehalfTo -ErrorAction SilentlyContinue | ForEach-Object { $_.GrantSendOnBehalfTo }
 
             
 
-            if(!$usersassigned){
+        if (!$usersassigned) {
             
             Write-Verbose "No user assigned to GrantSendonBehalf, skipping."
 
             
-            }
+        }
 
-            else{
+        else {
             
-            foreach ($user in $usersassigned){
+            foreach ($user in $usersassigned) {
             
-            $mailuser = (Get-Mailbox -Identity $user).name
-            $mailguid += $mailuser
-
-            
+                $mailuser = (Get-Mailbox -Identity $user).name
+                $mailguid += $mailuser
 
             
-            }
-
 
             
             }
 
+
+            
+        }
+
             
             
 
-            #Getting the users email identity.
-            $userguid = (Get-Mailbox -Identity $mailbox).name
-            if ($userguid -contains $mailguid){
+        #Getting the users email identity.
+        $userguid = (Get-Mailbox -Identity $mailbox).name
+        if ($userguid -contains $mailguid) {
             
-                Write-Verbose "$mailbox already assigned to $sharedmailbox"
+            Write-Verbose "$mailbox already assigned to $sharedmailbox"
                 
             
-            }
+        }
 
-            else {
+        else {
             
             $mailguid += $userguid
 
             
-             #Assigning Permissions
-             Write-Host "Assigning Grant Send on Behalf Permission to $mailbox" -NoNewline
-             Write-Host "on $sharedmailbox."
+            #Assigning Permissions
+            Write-Host "Assigning Grant Send on Behalf Permission to $mailbox" -NoNewline
+            Write-Host "on $sharedmailbox."
 
             
 
@@ -559,7 +580,7 @@ Function Set-SendOnBehalfPermissions {
 
             
 
-            }
+        }
 
 
 
@@ -807,8 +828,8 @@ Function Get-MissingLocationPackage {
         $filename = "Report_$usagelocation`_Users_NoLocationPackage.csv"
 
         try {
-        <#Getting directory information#>
-        $filebase = Join-Path $env:OneDrive $filename -ErrorAction SilentlyContinue
+            <#Getting directory information#>
+            $filebase = Join-Path $env:OneDrive $filename -ErrorAction SilentlyContinue
         }
         catch {
          
