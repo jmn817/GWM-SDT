@@ -377,7 +377,7 @@ Function Get-SendOnBehalfPermissions {
         
                     if ($user) {
                 
-                        Write-Host "$username " -nonewline; Write-Host "has the GrantSendOnBehalf permission set." -f Green; -nonewline
+                        Write-Host "$username " -nonewline; Write-Host "has the GrantSendOnBehalf permission set." -f Green
                         Write-Host " on $mailbox"
                     }
                 
@@ -531,14 +531,7 @@ Function Set-SendOnBehalfPermissions {
 
     }
 
-    End {
-
-        Remove-Variable Mailbox
-        Remove-Variable SharedMailbox
-        Remove-Variable Username
-        Remove-Variable 
-
-    }
+   
 
 
 }
