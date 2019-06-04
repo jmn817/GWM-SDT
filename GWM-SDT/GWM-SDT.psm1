@@ -377,8 +377,7 @@ Function Get-SendOnBehalfPermissions {
         
                     if ($user) {
                 
-                        Write-Host "$username " -nonewline; Write-Host "has the GrantSendOnBehalf permission set." -f Green
-                        Write-Host " on $mailbox"
+                        Write-Host "$username has the GrantSendOnBehalf permission set on $mailbox"
                     }
                 
                 }
@@ -431,9 +430,9 @@ Function Set-SendOnBehalfPermissions {
         # Define parameters below, each separated by a comma
             
         [Parameter(Mandatory = $True, ValueFromPipeline = $true)]
-        [String[]]$SharedMailbox,
+        [String]$SharedMailbox,
         [Parameter(Mandatory = $True, ValueFromPipeline = $true)]
-        [String[]]$Mailbox
+        [String]$Mailbox
             
         # Add additional parameters here.
     )
@@ -485,49 +484,89 @@ Function Set-SendOnBehalfPermissions {
             Write-Host "Module imported successfully."
     
         }
+        $usersassigned =@()
+        $mailguid =@()
 
     }
 
+    
     Process {
 
 
         #Check if the user has access rights to the shared mailbox already
-        Foreach ($user in $mailbox) {
+        
 
-            $userPermissionCheck = Get-mailbox -identity $sharedmailbox | select-object GrantSendonBehalfTo -ErrorAction SilentlyContinue | ForEach-Object { $_.GrantSendOnBehalfTo }
+            $usersassigned = Get-mailbox -identity $sharedmailbox | select-object GrantSendonBehalfTo -ErrorAction SilentlyContinue | ForEach-Object {$_.GrantSendOnBehalfTo}
 
-            if ($user -contains $userPermissionCheck) {
-
-                Write-Error "$user " -nonewline; Write-Error "already has Grant Send on Behalf permissions" -f Red; -nonewline
-                Write-Error " on $sharedMailbox"
-                Continue
-
- 
-            }
-            if ($user -notcontains $userPermissionCheck) {
-
-                #Assigning Permissions
-                Write-Host "Assigning Grant Send on Behalf Permission to $user" -NoNewline
-                Write-Host "on $sharedmailbox."
-
-                #Adding users to collection array
-                $user += $usersToEnable 
-
-
-            }
-
-        }
-
-        Get-Mailbox -Identity $mailbox | set-mailbox -GrantSendOnBehalfTo $usersToEnable
-        Write-Host "Permissions assigned to the following users:"
             
-        foreach ($successUser in $usersToEnable) {
 
-            $username = get-mailbox -Identity $successuser | Select-Object -ExpandProperty primarysmtpaddress
-            Write-Host "$username " -nonewline; Write-Host "has the GrantSendOnBehalf permission set." -f Green; -nonewline
-            Write-Host " on $sharedMailbox"
+            if(!$usersassigned){
+            
+            Write-Verbose "No user assigned to GrantSendonBehalf, skipping."
 
-        }
+            
+            }
+
+            else{
+            
+            foreach ($user in $usersassigned){
+            
+            $mailuser = (Get-Mailbox -Identity $user).name
+            $mailguid += $mailuser
+
+            
+
+            
+            }
+
+
+            
+            }
+
+            
+            
+
+            #Getting the users email identity.
+            $userguid = (Get-Mailbox -Identity $mailbox).name
+            if ($userguid -contains $mailguid){
+            
+                Write-Verbose "$mailbox already assigned to $sharedmailbox"
+                
+            
+            }
+
+            else {
+            
+            $mailguid += $userguid
+
+            
+             #Assigning Permissions
+             Write-Host "Assigning Grant Send on Behalf Permission to $mailbox" -NoNewline
+             Write-Host "on $sharedmailbox."
+
+            
+
+                
+            Get-Mailbox -Identity $sharedmailbox | set-mailbox -GrantSendOnBehalfTo $mailguid
+            Write-Host "Permissions assigned to the following users: $mailguid"
+            
+            
+
+            $username = get-mailbox -Identity $mailbox | Select-Object -ExpandProperty primarysmtpaddress
+            Write-Host "$username has the GrantSendOnBehalf permission set on $sharedMailbox" -ForegroundColor Green
+
+                
+
+            
+
+            }
+
+
+
+            
+        
+
+        
 
     }
 
